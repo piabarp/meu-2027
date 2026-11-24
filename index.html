@@ -20,6 +20,20 @@ button.primary,.action{background:var(--yellow);color:#111;border:0;border-radiu
 .area{border-left:3px solid var(--yellow);padding-left:11px;margin:15px 0}.monthnav{display:flex;gap:7px;overflow:auto;padding:3px 0 10px}.monthnav button{white-space:nowrap;background:#242424;color:#ddd;border:1px solid #444;border-radius:20px;padding:8px 12px}.monthnav button.sel{background:var(--yellow);color:#111;border-color:var(--yellow);font-weight:800}
 .notice{font-size:12px;color:#aaa;line-height:1.5}.saved{color:var(--green);font-size:12px;min-height:16px}
 .report-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:12px}.report-kpi{background:#101010;border:1px solid #333;border-radius:12px;padding:11px}.report-kpi .v{font-size:19px;font-weight:850;margin-top:5px}.chart-row{display:grid;grid-template-columns:92px 1fr 42px;gap:8px;align-items:center;margin:12px 0;font-size:12px}.chart-track{height:11px;background:#333;border-radius:20px;overflow:hidden}.chart-fill{height:100%;background:var(--yellow);border-radius:20px;min-width:0}.trend-chart{display:flex;align-items:flex-end;gap:7px;height:125px;padding:12px 3px 22px;border-bottom:1px solid #444}.trend-col{flex:1;min-width:0;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;position:relative}.trend-bar{width:100%;max-width:25px;background:var(--yellow);border-radius:5px 5px 0 0;min-height:2px}.trend-col small{position:absolute;bottom:-20px;color:#aaa;font-size:9px}.trend-col em{font-size:9px;color:#ddd;font-style:normal;margin-bottom:4px}
+
+.bv-tabs{display:flex;gap:7px;overflow:auto;margin:10px 0 14px}
+.bv-tabs button{white-space:nowrap;background:#242424;color:#ddd;border:1px solid #444;border-radius:20px;padding:8px 12px}
+.bv-tabs button.sel{background:var(--yellow);color:#111;font-weight:800}
+.bv-pane{display:none}.bv-pane.active{display:block}
+.bv-kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.bv-kpi{background:#101010;border:1px solid #333;border-radius:12px;padding:11px}
+.bv-kpi .v{font-size:18px;font-weight:850;margin-top:5px;overflow-wrap:anywhere}
+.bv-list .card{margin-bottom:9px}.bv-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.bv-actions button{padding:8px 10px;font-size:12px}
+.bv-formgrid{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}.bv-formgrid .wide{grid-column:1/-1}
+.bv-positive{color:#69c58a}.bv-negative{color:#ff7777}
+@media(min-width:600px){.bv-kpis{grid-template-columns:repeat(4,minmax(0,1fr))}}
+
 @media(min-width:600px){.grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
 </style></head><body>
 <header><div class="kicker">PLANEJAMENTO PESSOAL</div><h1>MEU <span class="yellow">2027</span></h1><p>Um ano de evolução, com equilíbrio e constância.</p></header>
@@ -77,9 +91,54 @@ button.primary,.action{background:var(--yellow);color:#111;border:0;border-radiu
 <div class="card"><strong>Divisão do lucro</strong><div class="muted">Valter recebe metade do lucro líquido. A parte do seu pai sai da sua metade.</div><label>Percentual da sua metade destinado ao seu pai (%)</label><input id="fatherPct" type="number" inputmode="decimal" min="0" max="100" step="0.5" value="0"><button class="primary" style="width:100%;margin-top:10px" onclick="saveSplit()">Salvar divisão</button><div class="saved" id="splitMsg"></div><div class="row" style="margin-top:12px"><div><div class="muted">Valter (50%)</div><div class="metric" id="valterTotal">R$ 0,00</div></div><div><div class="muted">Seu pai</div><div class="metric" id="fatherTotal">R$ 0,00</div></div></div><div class="muted" style="margin-top:8px">Sua parte final: <strong id="danielTotal">R$ 0,00</strong></div></div>
 <div class="grid"><div class="card"><div class="muted">Lucro líquido total</div><div class="metric" id="carProfit">R$ 0</div></div><div class="card"><div class="muted">Carros vendidos</div><div class="metric" id="carCount">0</div></div></div>
 <div id="carList"></div></section>
+
+<section id="bigode" class="page">
+<h2 class="section-title">Bigode Veículos</h2>
+<p class="notice">Controle da loja separado dos seus carros próprios. Só transfira para o patrimônio pessoal o valor efetivamente recebido por você.</p>
+<div class="bv-tabs">
+<button class="sel" data-bvtab="bvPainel">Painel</button><button data-bvtab="bvVeiculos">Veículos</button><button data-bvtab="bvDespesas">Despesas</button><button data-bvtab="bvCaixa">Fluxo de caixa</button>
+</div>
+<div id="bvPainel" class="bv-pane active">
+<div id="bvKpis" class="bv-kpis"></div>
+<div class="card"><strong>Resultado do estoque</strong><div id="bvResumo" class="notice" style="margin-top:9px"></div></div>
+<div class="card"><strong>Integrar ao patrimônio do Meu 2027</strong>
+<p class="notice">Informe apenas o dinheiro que você efetivamente recebeu da loja, depois da divisão com Walter. Isso evita duplicidade.</p>
+<label>Valor recebido por você (R$)</label><input id="bvPatValue" type="number" inputmode="decimal" min="0" step=".01">
+<label>Mês de referência</label><select id="bvPatMonth"></select>
+<button class="primary" style="width:100%;margin-top:10px" onclick="bvSendToPatrimony()">Somar ao patrimônio do mês</button><div class="saved" id="bvPatMsg"></div></div>
+</div>
+<div id="bvVeiculos" class="bv-pane">
+<div class="card"><strong id="bvCarTitle">Cadastrar veículo da loja</strong>
+<label>Veículo</label><input id="bvCarName" placeholder="Ex.: Celta 2012 LT 1.0 Preto">
+<div class="bv-formgrid">
+<label>Compra (R$)<input id="bvCarBuy" type="number" min="0" step=".01"></label>
+<label>Venda prevista (R$)<input id="bvCarAsk" type="number" min="0" step=".01"></label>
+<label>Venda realizada (R$)<input id="bvCarSold" type="number" min="0" step=".01"></label>
+<label>Status<select id="bvCarStatus"><option>Em estoque</option><option>Vendido</option><option>Reservado</option></select></label>
+<label>Walter já recebeu (R$)<input id="bvCarWalter" type="number" min="0" step=".01" value="0"></label>
+<label class="wide">Observações<textarea id="bvCarNotes"></textarea></label></div>
+<div class="row"><button class="primary" onclick="bvSaveCar()">Salvar veículo</button><button class="secondary" onclick="bvClearCar()">Limpar</button></div><div class="saved" id="bvCarMsg"></div></div>
+<div id="bvCarList" class="bv-list"></div></div>
+<div id="bvDespesas" class="bv-pane">
+<div class="card"><strong id="bvExpTitle">Cadastrar despesa</strong>
+<label>Veículo</label><select id="bvExpCar"></select><label>Descrição</label><input id="bvExpDesc">
+<div class="bv-formgrid"><label>Valor (R$)<input id="bvExpValue" type="number" min="0" step=".01"></label><label>Data<input id="bvExpDate" type="date"></label>
+<label class="wide">Situação<select id="bvExpPaid"><option value="true">Pago</option><option value="false">Pendente</option></select></label></div>
+<div class="row"><button class="primary" onclick="bvSaveExpense()">Salvar despesa</button><button class="secondary" onclick="bvClearExpense()">Limpar</button></div><div class="saved" id="bvExpMsg"></div></div>
+<div id="bvExpList" class="bv-list"></div></div>
+<div id="bvCaixa" class="bv-pane">
+<div class="card"><strong>Saldo inicial</strong><label>Caixa disponível no início do controle (R$)</label><input id="bvInitialCash" type="number" min="0" step=".01"><button class="primary" style="width:100%;margin-top:8px" onclick="bvSaveCash()">Salvar saldo inicial</button>
+<p class="notice">As despesas antigas já entram no custo dos veículos e não reduzem novamente o caixa inicial.</p></div>
+<div class="card"><strong id="bvMoveTitle">Nova movimentação</strong>
+<div class="bv-formgrid"><label>Tipo<select id="bvMoveType"><option value="entrada">Entrada</option><option value="saida">Saída</option></select></label><label>Valor (R$)<input id="bvMoveValue" type="number" min="0" step=".01"></label>
+<label class="wide">Descrição<input id="bvMoveDesc"></label><label>Categoria<select id="bvMoveCat"><option>Venda de veículo</option><option>Pagamento Walter</option><option>Compra de veículo</option><option>Despesa operacional</option><option>Retirada Daniel</option><option>Outros</option></select></label><label>Data<input id="bvMoveDate" type="date"></label><label>Situação<select id="bvMoveStatus"><option value="realizado">Realizado</option><option value="projetado">Projetado</option></select></label><label>Veículo (opcional)<select id="bvMoveCar"></select></label></div>
+<div class="row"><button class="primary" onclick="bvSaveMove()">Salvar movimentação</button><button class="secondary" onclick="bvClearMove()">Limpar</button></div><div class="saved" id="bvMoveMsg"></div></div><div id="bvCashList" class="bv-list"></div></div>
+<div class="card"><strong>Backup da Bigode</strong><p class="notice">Dados da loja ficam separados e salvos neste navegador. Exporte uma cópia periodicamente.</p><button class="secondary" style="width:100%" onclick="bvExport()">Baixar backup Bigode</button><label>Restaurar backup (.json)</label><input type="file" id="bvImportFile" accept="application/json"><button class="secondary" style="width:100%;margin-top:8px" onclick="bvImport()">Restaurar dados</button><div class="saved" id="bvBackupMsg"></div></div>
+</section>
+
 <section id="backup" class="page"><h2 class="section-title">Backup e dados</h2><div class="card"><p class="notice">Os dados são armazenados localmente no Safari. Faça backups periódicos para não perder seus registros.</p><button class="primary" style="width:100%" onclick="exportData()">Baixar backup</button><label>Restaurar backup (.json)</label><input type="file" id="importFile" accept="application/json"><button class="secondary" style="width:100%;margin-top:10px" onclick="importData()">Restaurar dados</button><div class="saved" id="backupMsg"></div><p class="notice">Para instalar como ícone na tela inicial: publique esta pasta em um endereço HTTPS; abra no Safari; toque em Compartilhar → Adicionar à Tela de Início. O arquivo sozinho não sincroniza entre aparelhos.</p></div></section>
 </main>
-<nav><button class="active" data-page="inicio"><span class="ico">⌂</span>Início</button><button data-page="metas"><span class="ico">◎</span>Metas</button><button data-page="mensal"><span class="ico">▦</span>Mensal</button><button data-page="carros"><span class="ico">🚘</span>Carros</button><button data-page="habitos"><span class="ico">✓</span>Hábitos</button><button data-page="conquistas"><span class="ico">★</span>Conquistas</button><button data-page="backup"><span class="ico">⇧</span>Backup</button></nav>
+<nav><button class="active" data-page="inicio"><span class="ico">⌂</span>Início</button><button data-page="metas"><span class="ico">◎</span>Metas</button><button data-page="mensal"><span class="ico">▦</span>Mensal</button><button data-page="carros"><span class="ico">🚘</span>Carros</button><button data-page="bigode"><span class="ico">🏁</span>Bigode</button><button data-page="habitos"><span class="ico">✓</span>Hábitos</button><button data-page="conquistas"><span class="ico">★</span>Conquistas</button><button data-page="backup"><span class="ico">⇧</span>Backup</button></nav>
 <script>
 const KEY='meu2027_v1',months=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 const achievementGroups=[
@@ -126,5 +185,52 @@ function loadHabits(){let el=document.getElementById('habitDate');if(!el.value)e
 function saveHabits(){let v={};habitLabels.forEach((h,i)=>v[i]=document.getElementById('h'+i).checked);data.habits[habitKey()]=v;persist();document.getElementById('habitMsg').textContent='Hábitos salvos.'}
 function exportData(){let blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='backup-meu-2027.json';a.click();URL.revokeObjectURL(a.href)}
 function importData(){let f=document.getElementById('importFile').files[0];if(!f){document.getElementById('backupMsg').textContent='Escolha um arquivo JSON primeiro.';return}let r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);if(!x.months||!x.habits||!x.achievements)throw 0;x.cars=x.cars||[];x.goals=x.goals||{startPat:50000,goalPat:200000,goalBig:48,goalOwn:12};x.split=x.split||{fatherPct:0};x.appVersion=3;data=x;persist();loadGoals();renderAchievements();document.getElementById('backupMsg').textContent='Backup restaurado.'}catch(e){document.getElementById('backupMsg').textContent='Arquivo inválido.'}};r.readAsText(f)}
-document.getElementById('habitDate').value='2027-01-01';renderMonths();renderDashboard();renderAchievements();loadMonth();loadHabits();loadGoals();renderCars();
+
+// Módulo financeiro Bigode Veículos: dados independentes do controle de carros pessoais.
+const BVKEY='bigode_veiculos_v1';
+const bvDefault={initialCash:2000,cars:[
+{id:'BV001',name:'Celta 2012 LT 1.0 Preto',buy:20000,ask:28000,sold:0,status:'Em estoque',walter:0,notes:''},
+{id:'BV002',name:'Fox 2010 Prime 1.6 Prata',buy:26000,ask:35900,sold:0,status:'Em estoque',walter:0,notes:''},
+{id:'BV003',name:'Onix Sedan 2020 1.0 Turbo Prata',buy:47500,ask:59900,sold:0,status:'Em estoque',walter:0,notes:''}],
+expenses:[
+['BV002','Transferência',400],['BV002','Comissão',350],['BV002','Cartório',16.45],['BV002','Gasolina',100],['BV002','Freios e Coxim',349],['BV002','Mecânico',300],['BV002','Bancos',200],['BV002','Polimento',300],['BV002','Vidro Elétrico',200],['BV002','Volante',180],['BV002','Olho de Gato',77],['BV002','Maçaneta',46],
+['BV001','Transferência',400],['BV001','Comissão',350],['BV001','Polimento',300],['BV001','Farol',50],['BV001','Higienização',300],['BV001','Alinhamento',160],['BV001','Lanternas',117],['BV001','Pneus',500],['BV001','Pintor (Nem)',1500],['BV001','Bateria',250],
+['BV003','Transferência',400],['BV003','Comissão',350],['BV003','Polimento',300],['BV003','Higienização',300],['BV003','Mecânica',500]
+].map((a,i)=>({id:'BVD'+i,car:a[0],desc:a[1],value:a[2],date:'',paid:true})),moves:[],transfers:[]};
+function bvLoad(){try{let x=JSON.parse(localStorage.getItem(BVKEY));return x&&Array.isArray(x.cars)&&Array.isArray(x.expenses)?x:JSON.parse(JSON.stringify(bvDefault))}catch(e){return JSON.parse(JSON.stringify(bvDefault))}}
+let bv=bvLoad(),bvCarEdit=null,bvExpEdit=null,bvMoveEdit=null;
+function bvFmt(n){return money(Number(n)||0)}
+function bvCost(c){return Number(c.buy||0)+bv.expenses.filter(e=>e.car===c.id).reduce((s,e)=>s+Number(e.value||0),0)}
+function bvProfit(c){return (Number(c.sold)>0?Number(c.sold):Number(c.ask||0))-bvCost(c)}
+function bvStats(){let stock=bv.cars.filter(c=>c.status==='Em estoque'),sold=bv.cars.filter(c=>c.status==='Vendido'),real=sold.reduce((s,c)=>s+bvProfit(c),0),ins=bv.moves.filter(m=>m.status==='realizado'&&m.type==='entrada').reduce((s,m)=>s+m.value,0),outs=bv.moves.filter(m=>m.status==='realizado'&&m.type==='saida').reduce((s,m)=>s+m.value,0),pi=bv.moves.filter(m=>m.type==='entrada').reduce((s,m)=>s+m.value,0),po=bv.moves.filter(m=>m.type==='saida').reduce((s,m)=>s+m.value,0),w=real/2;return{stock,sold,invest:stock.reduce((s,c)=>s+bvCost(c),0),ask:stock.reduce((s,c)=>s+Number(c.ask||0),0),pot:stock.reduce((s,c)=>s+Number(c.ask||0)-bvCost(c),0),real,daniel:w,walter:real-w,walterDue:Math.max(0,real-w-sold.reduce((s,c)=>s+Number(c.walter||0),0)),cash:Number(bv.initialCash||0)+ins-outs,projected:Number(bv.initialCash||0)+pi-po}}
+function bvSave(){localStorage.setItem(BVKEY,JSON.stringify(bv));bvRender();renderDashboard()}
+function bvTab(id){document.querySelectorAll('.bv-pane').forEach(x=>x.classList.toggle('active',x.id===id));document.querySelectorAll('[data-bvtab]').forEach(x=>x.classList.toggle('sel',x.dataset.bvtab===id))}
+document.querySelectorAll('[data-bvtab]').forEach(x=>x.addEventListener('click',()=>bvTab(x.dataset.bvtab)));
+function bvSelects(){let opts=bv.cars.map(c=>`<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('');document.getElementById('bvExpCar').innerHTML=opts;document.getElementById('bvMoveCar').innerHTML='<option value="">Sem vínculo</option>'+opts}
+function bvRender(){let t=bvStats();document.getElementById('bvKpis').innerHTML=[['Caixa disponível',bvFmt(t.cash)],['Caixa projetado',bvFmt(t.projected)],['Estoque investido',bvFmt(t.invest)],['Carros em estoque',t.stock.length],['Vendas potenciais',bvFmt(t.ask)],['Lucro potencial',bvFmt(t.pot)],['Lucro realizado',bvFmt(t.real)],['Parte Daniel (50%)',bvFmt(t.daniel)],['Parte Walter (50%)',bvFmt(t.walter)],['Walter a pagar',bvFmt(t.walterDue)]].map(x=>`<div class="bv-kpi"><div class="muted">${x[0]}</div><div class="v">${x[1]}</div></div>`).join('');
+document.getElementById('bvResumo').innerHTML=`Custo do estoque: <b>${bvFmt(t.invest)}</b><br>Venda prevista: <b>${bvFmt(t.ask)}</b><br>Lucro potencial antes da divisão: <b class="yellow">${bvFmt(t.pot)}</b><br>Lucro realizado: <b>${bvFmt(t.real)}</b><br>Capital controlado (caixa + estoque): <b>${bvFmt(t.cash+t.invest)}</b>`;
+document.getElementById('bvCarList').innerHTML=bv.cars.map(c=>`<div class="card"><strong>${esc(c.name)}</strong><div class="notice">${c.status} · Compra ${bvFmt(c.buy)} · Despesas ${bvFmt(bvCost(c)-c.buy)}<br>Custo ${bvFmt(bvCost(c))} · Venda ${bvFmt(c.sold||c.ask)} · Lucro ${bvFmt(bvProfit(c))}</div>${c.notes?`<p class="notice">${esc(c.notes)}</p>`:''}<div class="bv-actions"><button class="secondary" onclick="bvEditCar('${c.id}')">Editar</button><button class="secondary" onclick="bvNewExpense('${c.id}')">Despesa</button><button class="secondary" onclick="bvDeleteCar('${c.id}')">Excluir</button></div></div>`).join('')||'<div class="card muted">Nenhum veículo.</div>';
+document.getElementById('bvExpList').innerHTML=bv.expenses.map(e=>`<div class="card"><strong>${esc(e.desc)} · ${bvFmt(e.value)}</strong><div class="notice">${esc(bv.cars.find(c=>c.id===e.car)?.name||'Veículo')} · ${e.paid?'Pago':'Pendente'}</div><div class="bv-actions"><button class="secondary" onclick="bvEditExpense('${e.id}')">Editar</button><button class="secondary" onclick="bvDeleteExpense('${e.id}')">Excluir</button></div></div>`).join('')||'<div class="card muted">Nenhuma despesa.</div>';
+document.getElementById('bvCashList').innerHTML=bv.moves.map(m=>`<div class="card"><strong>${esc(m.desc)} · ${m.type==='entrada'?'+':'−'} ${bvFmt(m.value)}</strong><div class="notice">${m.date||'Sem data'} · ${m.category} · ${m.status}</div><div class="bv-actions"><button class="secondary" onclick="bvEditMove('${m.id}')">Editar</button><button class="secondary" onclick="bvDeleteMove('${m.id}')">Excluir</button></div></div>`).reverse().join('')||'<div class="card muted">Nenhuma movimentação.</div>';
+document.getElementById('bvInitialCash').value=bv.initialCash;bvSelects()}
+function bvClearCar(){bvCarEdit=null;['bvCarName','bvCarBuy','bvCarAsk','bvCarSold','bvCarNotes'].forEach(id=>document.getElementById(id).value='');document.getElementById('bvCarWalter').value=0;document.getElementById('bvCarStatus').value='Em estoque';document.getElementById('bvCarTitle').textContent='Cadastrar veículo da loja'}
+function bvSaveCar(){let name=document.getElementById('bvCarName').value.trim(),buy=Number(document.getElementById('bvCarBuy').value);if(!name||buy<=0){document.getElementById('bvCarMsg').textContent='Informe veículo e compra.';return}let c={id:bvCarEdit||'BV'+Date.now(),name,buy,ask:Number(document.getElementById('bvCarAsk').value)||0,sold:Number(document.getElementById('bvCarSold').value)||0,status:document.getElementById('bvCarStatus').value,walter:Number(document.getElementById('bvCarWalter').value)||0,notes:document.getElementById('bvCarNotes').value};if(bvCarEdit)bv.cars=bv.cars.map(x=>x.id===bvCarEdit?c:x);else bv.cars.push(c);bvClearCar();document.getElementById('bvCarMsg').textContent='Veículo salvo.';bvSave()}
+function bvEditCar(id){let c=bv.cars.find(x=>x.id===id);if(!c)return;bvCarEdit=id;bvTab('bvVeiculos');document.getElementById('bvCarName').value=c.name;document.getElementById('bvCarBuy').value=c.buy;document.getElementById('bvCarAsk').value=c.ask;document.getElementById('bvCarSold').value=c.sold||'';document.getElementById('bvCarStatus').value=c.status;document.getElementById('bvCarWalter').value=c.walter||0;document.getElementById('bvCarNotes').value=c.notes||'';document.getElementById('bvCarTitle').textContent='Editar veículo'}
+function bvDeleteCar(id){if(confirm('Excluir veículo e despesas vinculadas?')){bv.cars=bv.cars.filter(c=>c.id!==id);bv.expenses=bv.expenses.filter(e=>e.car!==id);bvSave()}}
+function bvNewExpense(id){bvTab('bvDespesas');bvClearExpense();document.getElementById('bvExpCar').value=id}
+function bvClearExpense(){bvExpEdit=null;document.getElementById('bvExpDesc').value='';document.getElementById('bvExpValue').value='';document.getElementById('bvExpDate').value='';document.getElementById('bvExpPaid').value='true';document.getElementById('bvExpTitle').textContent='Cadastrar despesa'}
+function bvSaveExpense(){let car=document.getElementById('bvExpCar').value,desc=document.getElementById('bvExpDesc').value.trim(),value=Number(document.getElementById('bvExpValue').value);if(!car||!desc||value<=0){document.getElementById('bvExpMsg').textContent='Preencha veículo, descrição e valor.';return}let e={id:bvExpEdit||'BVD'+Date.now(),car,desc,value,date:document.getElementById('bvExpDate').value,paid:document.getElementById('bvExpPaid').value==='true'};if(bvExpEdit)bv.expenses=bv.expenses.map(x=>x.id===bvExpEdit?e:x);else bv.expenses.push(e);bvClearExpense();bvSave()}
+function bvEditExpense(id){let e=bv.expenses.find(x=>x.id===id);if(!e)return;bvExpEdit=id;bvTab('bvDespesas');document.getElementById('bvExpCar').value=e.car;document.getElementById('bvExpDesc').value=e.desc;document.getElementById('bvExpValue').value=e.value;document.getElementById('bvExpDate').value=e.date;document.getElementById('bvExpPaid').value=String(e.paid);document.getElementById('bvExpTitle').textContent='Editar despesa'}
+function bvDeleteExpense(id){if(confirm('Excluir despesa?')){bv.expenses=bv.expenses.filter(x=>x.id!==id);bvSave()}}
+function bvSaveCash(){bv.initialCash=Number(document.getElementById('bvInitialCash').value)||0;bvSave()}
+function bvClearMove(){bvMoveEdit=null;['bvMoveValue','bvMoveDesc','bvMoveDate'].forEach(id=>document.getElementById(id).value='');document.getElementById('bvMoveType').value='entrada';document.getElementById('bvMoveStatus').value='realizado';document.getElementById('bvMoveCat').value='Venda de veículo';document.getElementById('bvMoveTitle').textContent='Nova movimentação'}
+function bvSaveMove(){let desc=document.getElementById('bvMoveDesc').value.trim(),value=Number(document.getElementById('bvMoveValue').value);if(!desc||value<=0){document.getElementById('bvMoveMsg').textContent='Informe descrição e valor.';return}let m={id:bvMoveEdit||'BVM'+Date.now(),type:document.getElementById('bvMoveType').value,value,desc,category:document.getElementById('bvMoveCat').value,date:document.getElementById('bvMoveDate').value,status:document.getElementById('bvMoveStatus').value,car:document.getElementById('bvMoveCar').value};if(bvMoveEdit)bv.moves=bv.moves.map(x=>x.id===bvMoveEdit?m:x);else bv.moves.push(m);bvClearMove();bvSave()}
+function bvEditMove(id){let m=bv.moves.find(x=>x.id===id);if(!m)return;bvMoveEdit=id;bvTab('bvCaixa');document.getElementById('bvMoveType').value=m.type;document.getElementById('bvMoveValue').value=m.value;document.getElementById('bvMoveDesc').value=m.desc;document.getElementById('bvMoveCat').value=m.category;document.getElementById('bvMoveDate').value=m.date;document.getElementById('bvMoveStatus').value=m.status;document.getElementById('bvMoveCar').value=m.car||'';document.getElementById('bvMoveTitle').textContent='Editar movimentação'}
+function bvDeleteMove(id){if(confirm('Excluir movimentação?')){bv.moves=bv.moves.filter(x=>x.id!==id);bvSave()}}
+function bvSendToPatrimony(){let value=Number(document.getElementById('bvPatValue').value),month=Number(document.getElementById('bvPatMonth').value);if(value<=0){document.getElementById('bvPatMsg').textContent='Informe um valor válido.';return}let d=data.months[month]||{},base=Number(d.pat)||Number(goals().startPat)||0;d.pat=base+value;data.months[month]=d;bv.transfers.push({value,month,date:new Date().toISOString()});persist();document.getElementById('bvPatValue').value='';document.getElementById('bvPatMsg').textContent='Valor integrado ao patrimônio do mês.'}
+function bvExport(){let a=document.createElement('a'),u=URL.createObjectURL(new Blob([JSON.stringify(bv,null,2)],{type:'application/json'}));a.href=u;a.download='backup-bigode-veiculos.json';a.click();URL.revokeObjectURL(u)}
+function bvImport(){let f=document.getElementById('bvImportFile').files[0];if(!f){document.getElementById('bvBackupMsg').textContent='Escolha o backup JSON.';return}let r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);if(!Array.isArray(x.cars)||!Array.isArray(x.expenses)||!Array.isArray(x.moves))throw 0;bv=x;bvSave();document.getElementById('bvBackupMsg').textContent='Backup restaurado.'}catch(e){document.getElementById('bvBackupMsg').textContent='Arquivo inválido.'}};r.readAsText(f)}
+document.getElementById('bvPatMonth').innerHTML=months.map((m,i)=>`<option value="${i}">${m} de 2027</option>`).join('');
+
+document.getElementById('habitDate').value='2027-01-01';renderMonths();renderDashboard();renderAchievements();loadMonth();loadHabits();loadGoals();renderCars();bvRender();
 </script><script>if('serviceWorker' in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(()=>{});</script></body></html>
